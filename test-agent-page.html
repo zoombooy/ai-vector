@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #1890ff;
+            border-bottom: 2px solid #1890ff;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 4px solid #1890ff;
+        }
+        .success {
+            color: #52c41a;
+        }
+        .error {
+            color: #ff4d4f;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 Agent API 测试工具</h1>
+    
+    <div class="container">
+        <h2>1. 测试获取Agent详情</h2>
+        <label>Agent ID:</label>
+        <input type="number" id="agentId" value="1" />
+        <button onclick="testGetAgent()">获取Agent</button>
+        <pre id="agentResult">点击按钮测试...</pre>
+    </div>
+
+    <div class="container">
+        <h2>2. 测试获取Agent列表</h2>
+        <button onclick="testGetAgentList()">获取列表</button>
+        <pre id="listResult">点击按钮测试...</pre>
+    </div>
+
+    <div class="container">
+        <h2>3. 测试执行Agent</h2>
+        <label>Agent Code:</label>
+        <input type="text" id="agentCode" value="weather_agent" />
+        <label>输入参数 (JSON):</label>
+        <textarea id="agentInput" rows="5">{"city": "北京"}</textarea>
+        <button onclick="testExecuteAgent()">执行Agent</button>
+        <pre id="executeResult">点击按钮测试...</pre>
+    </div>
+
+    <div class="container">
+        <h2>4. 测试获取执行历史</h2>
+        <button onclick="testGetHistory()">获取历史</button>
+        <pre id="historyResult">点击按钮测试...</pre>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        const token = localStorage.getItem('token') || 'your-token-here';
+
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(API_BASE + url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        ...options.headers
+                    }
+                });
+                const data = await response.json();
+                return { success: true, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testGetAgent() {
+            const id = document.getElementById('agentId').value;
+            const result = await apiCall(`/agent/${id}`);
+            displayResult('agentResult', result);
+        }
+
+        async function testGetAgentList() {
+            const result = await apiCall('/agent/page?pageNum=1&pageSize=10');
+            displayResult('listResult', result);
+        }
+
+        async function testExecuteAgent() {
+            const agentCode = document.getElementById('agentCode').value;
+            const inputText = document.getElementById('agentInput').value;
+            
+            let input;
+            try {
+                input = JSON.parse(inputText);
+            } catch (e) {
+                displayResult('executeResult', { 
+                    success: false, 
+                    error: 'JSON格式错误: ' + e.message 
+                });
+                return;
+            }
+
+            const result = await apiCall('/agent/execute', {
+                method: 'POST',
+                body: JSON.stringify({
+                    agentCode: agentCode,
+                    input: input
+                })
+            });
+            displayResult('executeResult', result);
+        }
+
+        async function testGetHistory() {
+            const result = await apiCall('/agent/history?pageNum=1&pageSize=10');
+            displayResult('historyResult', result);
+        }
+
+        function displayResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            if (result.success) {
+                element.innerHTML = `<span class="success">✓ 成功 (状态码: ${result.status})</span>\n\n` + 
+                    JSON.stringify(result.data, null, 2);
+            } else {
+                element.innerHTML = `<span class="error">✗ 失败</span>\n\n` + 
+                    JSON.stringify(result.error, null, 2);
+            }
+        }
+
+        // 页面加载时检查token
+        window.onload = function() {
+            if (!localStorage.getItem('token')) {
+                alert('警告: 未找到token，请先登录系统或手动设置token');
+            }
+        }
+    </script>
+</body>
+</html>
+

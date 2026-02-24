@@ -1,0 +1,56 @@
+package com.aimanager.user.entity;
+
+import com.aimanager.common.entity.BaseEntity;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 用户实体
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("t_user")
+public class User extends BaseEntity {
+    
+    /**
+     * 用户名
+     */
+    private String username;
+    
+    /**
+     * 密码
+     */
+    private String password;
+    
+    /**
+     * 真实姓名
+     */
+    private String realName;
+    
+    /**
+     * 邮箱
+     */
+    private String email;
+    
+    /**
+     * 手机号
+     */
+    private String phone;
+    
+    /**
+     * 头像
+     */
+    private String avatar;
+    
+    /**
+     * 组织ID
+     */
+    private Long organizationId;
+    
+    /**
+     * 状态：0-禁用，1-启用
+     */
+    private Integer status;
+}
+

@@ -1,0 +1,64 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ai-gateway
+  
+  # Gateway配置
+  cloud:
+    gateway:
+      routes:
+        # 认证服务路由
+        - id: ai-auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth/**
+
+        # 知识库服务路由
+        - id: ai-knowledge-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/knowledge/**,/document/**,/category/**
+
+        # 用户服务路由
+        - id: ai-user-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/user/**,/organization/**,/role/**
+
+        # AI模型服务路由
+        - id: ai-model-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/model/**
+
+        # 向量服务路由
+        - id: ai-vector-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/vector/**
+
+        # 问答服务路由
+        - id: ai-qa-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/qa/**,/function/**,/agent/**,/mcp/**,/workflow/**
+      
+      # 全局CORS配置
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: "*"
+            allowed-methods: "*"
+            allowed-headers: "*"
+            allow-credentials: true
+            max-age: 3600
+
+# 日志配置
+logging:
+  level:
+    org.springframework.cloud.gateway: debug
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
+
